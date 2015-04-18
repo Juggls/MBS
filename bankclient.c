@@ -72,10 +72,14 @@ command_input_thread( void * arg ) //This thread
 		
 	while (write( 1, prompt, sizeof(prompt) ), read(0, input, sizeof(input)) > 0 )
 	{
+
 		size = strlen(input);
 		input[size-1]= '\0';
 		write(sd, input, strlen(input) + 1 );
-		sleep(2);
+		if( strcmp("quit", input) == 0){
+			return 0; 
+		}
+		sleep(2); //ensure delay of 2
 	}
 
 	close( sd );	
@@ -96,8 +100,7 @@ response_output_thread( void * arg )
 	long		senderIPaddr;
 
 	sd = *(int *)arg;
-		// keeping to memory management covenant
-		// Don't join on this thread
+
 	while ( read( sd, request, sizeof(request) ) > 0 )
 	{
 		write( 1, request, strlen(request) );
@@ -124,35 +127,17 @@ main( int argc, char ** argv )
 		fprintf( stderr, "\x1b[1;31mNo host name specified.  File %s line %d.\x1b[0m\n", __FILE__, __LINE__ );
 		exit( 1 );
 	}
-	else if ( (sd = connect_to_server( argv[1], "3000" )) == -1 )
+	while ( (sd = connect_to_server( argv[1], "3000" )) == -1 )
 	{
 		write( 1, message, sprintf( message,  "\x1b[1;31mCould not connect to server %s errno %s\x1b[0m\n", argv[1], strerror( errno ) ) );
-		return 1;
+		sleep(3);
 	}
-	else
-	{
 
-		printf( "Connected to server %s\n", argv[1] );
-		createCommThreads(sd);
-		
-
-		/*
-		while ( write( 1, prompt, sizeof(prompt) ), (len = read( 0, string, sizeof(string) )) > 0 )
-		{
-			
-			string[len-1]= '\0';
-			write( sd, string, strlen( string ) + 1 );
-			
-
-			write(sd, string, 1);
-			read(sd, buffer, sizeof(buffer) );
-			sprintf( output, "Result is >%s<\n", buffer );
-			write( 1, output, strlen(output) );
-		}
-		*/
-		close( sd );
-		return 0;
-	}
+	printf( "Connected to server %s\n", argv[1] );
+	createCommThreads(sd);
+	close( sd );
+	return 0;
+	
 }
 
 int createCommThreads(int socketdescriptor){ //this method creates the response_output_thread and command_input thread
