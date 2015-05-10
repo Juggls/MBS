@@ -1,4 +1,6 @@
 # MBS
+Matthew Lee, Alan Gou
+
 Multithreaded bank system fun 
 
 Here is how our program works (we did the XC multiprocessed version): 
